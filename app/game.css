@@ -18,10 +18,10 @@ html, body {
 .Game {
   position: absolute;
   background: white;
-  top: 100px;
-  left: 100px;
-  right: 100px;
-  bottom: 100px;
+  top: 10px;
+  left: 10px;
+  right: 10px;
+  bottom: 10px;
 }
 
 .Score {
