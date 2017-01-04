@@ -10,12 +10,6 @@ html, body {
   font-weight: bold;
 }
 
-#fps {
-  position: absolute;
-  right: 130px;
-  bottom: 60px;
-}
-
 .Game {
   border: 10px solid aliceblue;
   position: absolute;
@@ -50,4 +44,10 @@ html, body {
 
 .name input:focus {
   outline: none;
+}
+
+.ConfettiContainer {
+  position: absolute;
+  transition: opacity 0.5s linear;
+  opacity: 0;
 }

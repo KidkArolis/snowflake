@@ -13,7 +13,8 @@ module.exports = {
       loaders: 'buble-loader',
       // include: [path.join(__dirname, 'app'),
       query: {
-        objectAssign: 'Object.assign'
+        objectAssign: 'Object.assign',
+        jsx: 'React.h'
       }
     }, {
       test: /\.css$/,

@@ -1,211 +1,155 @@
-require('./game.css')
-require('./confetti.css')
-
-require('fpsmeter')
-const React = require('react')
+const React = require('preact')
 const Snowflake = require('./snowflake')
-const gravity = require('./gravity')
 const Candy = require('./candy')
+const Confetti = require('./confetti')
+const gravity = require('./gravity')
+const loop = require('./loop')
+require('./game.css')
 
-const FPSMeter = window.FPSMeter
-const requestAnimationFrame = window.requestAnimationFrame
+const ICE_PADDING = 20
+// const BASE_WIDTH = 1000
+// const BASE_HEIGHT = 800
 
-var width = window.innerWidth - 20
-var height = window.innerHeight - 20
-
-function parse (str, fallback) {
-  try {
-    return JSON.parse(str) || fallback
-  } catch (err) {
-    return fallback
+module.exports = class Game extends React.Component {
+  constructor () {
+    super()
+    this.state = this.initialState()
   }
-}
 
-function random (min, max) {
-  return (min + (Math.random() * (max - min)))
-}
-
-function randomPos () {
-  return { x: random(0, width - 100), y: random(0, height - 100) }
-}
-
-let CHEAT = false
-
-function overlap (b1, b2) {
-  let s = box => ({
-    left: box.position.x + box.radius / 4,
-    right: box.position.x + box.radius - box.radius / 4,
-    top: box.position.y + box.radius / 4,
-    bottom: box.position.y + box.radius - box.radius / 4
-  })
-  let box1 = s(b1)
-  let box2 = s(b2)
-  return !(
-    (box1.right < box2.left) ||
-    (box1.left > box2.right) ||
-    (box1.top > box2.bottom) ||
-    (box1.bottom < box2.top)
-  )
-}
-
-module.exports = React.createClass({
-  getInitialState () {
+  initialState () {
+    let dimensions = computeDimensions()
     return {
       over: false,
-      name: parse(window.localStorage.getItem('player'), { name: 'Snowflake' }).name,
-      time: 0,
+      name: parse(window.localStorage.getItem('player'), { name: null }).name,
       jumps: 20,
       score: 0,
       streak: [0],
-      ball: gravity(),
+      dimensions: dimensions,
       highscores: parse(window.localStorage.getItem('highscores'), []),
+      scoreRecorded: false,
+      ball: {
+        visible: true,
+        position: { x: dimensions.width / 2, y: 0 },
+        velocity: { x: 0, y: 0 },
+        mass: 2, // kg
+        radius: 64, // 1px = 1cm (?)
+        restitution: -0.8
+      },
       candy: {
-        position: randomPos(),
-        radius: 100,
-        visible: true
+        visible: true,
+        position: randomPos(dimensions),
+        radius: 100
       },
       confetti: {
         visible: false,
-        position: {
-          x: 0,
-          y: 0
-        }
+        position: { x: 0, y: 0 }
       }
     }
-  },
+  }
 
   componentDidMount () {
-    let self = this
+    loop(() => this.update())
+    document.addEventListener('keydown', space(() => this.jump()))
+    document.addEventListener('touchstart', () => this.jump(), false)
+    window.addEventListener('resize', () => {
+      this.setState({ dimensions: computeDimensions() })
+    })
+  }
 
-    require('./confetti')()
+  update () {
+    let { ball, candy, confetti, score, jumps, streak, dimensions } = this.state
 
-    let options = {
-      fps: 30,
-      render: time => {
-        let ball = gravity()
+    let nextBall = gravity(ball, dimensions)
 
-        let { score, jumps, streak, confetti } = this.state
+    if (overlap(nextBall, candy)) {
+      confetti = this.revealConfetti(candy.position)
+      candy = this.moveCandy(dimensions)
+      streak[streak.length - 1] += 1
+      score = score + 1
+      jumps = jumps + 2 + streak.reduce((total, v) => total + v, 0)
 
-        let candy = self.state.candy
-        if (overlap(ball, candy) || CHEAT) {
-          CHEAT = false
-          confetti.visible = true
-          confetti.position = {
-            x: candy.position.x,
-            y: candy.position.y
-          }
-          setTimeout(() => {
-            confetti.visible = false
-          }, 3000)
-          candy = {
-            position: randomPos(),
-            radius: 100,
-            visible: true
-          }
-
-          streak[streak.length - 1] += 1
-
-          score = score + 1
-          jumps = jumps + 2 + streak.reduce((total, v) => total + v, 0)
-        }
-
-        self.setState({
-          time: time,
-          ball: ball,
-          candy: candy,
-          score: score,
-          jumps: jumps,
-          streak
-        })
-      }
+      // TODO - find a more elegant solution
+      clearTimeout(this.gameOverTimeout)
     }
 
-    let now
-    let dt = 0
-    let last = timestamp()
-    let slow = options.slow || 1
-    let step = 1 / options.fps
-    let slowStep = slow * step
-    // let update = options.update
-    let render = options.render
-    // let fpsmeter = new FPSMeter(document.getElementById('fps'), { decimals: 0, graph: true, theme: 'dark' })
+    this.setState({ ball: nextBall, candy, confetti, score, jumps, streak })
+  }
 
-    function frame () {
-      // fpsmeter.tickStart()
-      now = timestamp()
-      dt = dt + Math.min(1, (now - last) / 1000)
-      // while (dt > slowStep) {
-      //   dt = dt - slowStep
-        // update(step)
-      // }
-      render(dt / slow)
-      last = now
-      // fpsmeter.tick()
-      requestAnimationFrame(frame, options.canvas)
+  jump () {
+    let { ball, over, jumps, streak } = this.state
+
+    // game is in over state, restart the game upon hitting space
+    if (over) {
+      this.setState(this.initialState())
+      return
     }
 
-    requestAnimationFrame(frame)
-
-    // KEYS
-    const press = event => {
-      if (event.keyCode === 32 && this.state.over) {
-        this.setState(this.getInitialState())
-      }
-
-      if (event.keyCode === 32 && this.state.jumps > 0) {
-        gravity.ball.velocity.y = -20
-        gravity.ball.velocity.x = (Math.random() > 0.5 ? 1 : -1) * Math.random() * 20
-
-        let streak = this.state.streak
-        if (streak[streak.length - 1] === 0) {
-          streak = [0]
-        } else {
-          streak.push(0)
-        }
-
-        if (this.state.jumps === 1) {
-          // TODO clear if score goes up
-          setTimeout(() => {
-            if (this.state.jumps > 0) {
-              return
-            }
-
-            highscores.push({
-              name: this.state.name,
-              score: this.state.score
-            })
-            highscores.sort(function (a, b) {
-              return b.score - a.score
-            })
-            highscores = highscores.slice(0, 10)
-            window.localStorage.setItem('highscores', JSON.stringify(highscores))
-            this.setState({
-              over: true,
-              highscores: highscores
-            })
-          }, 3000)
-        }
-        let highscores = this.state.highscores
-
-        this.setState({
-          jumps: this.state.jumps - 1,
-          streak: streak,
-          highscores: highscores
-        })
-      }
-
-      if (event.keyCode === 13) {
-        CHEAT = true
-      }
+    // if no jumps are left, stop doing stuff
+    if (jumps <= 0) {
+      return
     }
-    document.addEventListener('keydown', press)
 
-    // setInterval(function () {
-    //   if (Math.random() < 0.5) {
-    //     press({ keyCode: 32 })
-    //   }
-    // }, 1000)
-  },
+    ball.velocity.y = -20
+    ball.velocity.x = (Math.random() > 0.5 ? 1 : -1) * Math.random() * 20
+
+    if (streak[streak.length - 1] === 0) {
+      streak = [0]
+    } else {
+      streak.push(0)
+    }
+
+    if (jumps === 1) {
+      // TODO clear if score goes up
+      this.gameOverTimeout = setTimeout(() => {
+        let { jumps } = this.state
+        if (jumps > 0) {
+          return
+        }
+        this.gameOver()
+      }, 3000)
+    }
+
+    this.setState({
+      ball: ball,
+      jumps: this.state.jumps - 1,
+      streak: streak
+    })
+  }
+
+  gameOver () {
+    let { name, score, highscores, scoreRecorded } = this.state
+
+    if (name && score > 0 && !scoreRecorded) {
+      highscores.push({ name, score })
+      highscores.sort((a, b) => b.score - a.score)
+      highscores = highscores.slice(0, 10)
+      window.localStorage.setItem('highscores', JSON.stringify(highscores))
+    }
+
+    this.setState({ over: true, highscores, scoreRecorded: true })
+  }
+
+  // TODO, find a more elegant way
+  revealConfetti (pos) {
+    setTimeout(() => {
+      let confetti = this.state.confetti
+      confetti.visible = false
+      this.setState({ confetti })
+    }, 3000)
+
+    return {
+      visible: true,
+      position: { x: pos.x, y: pos.y }
+    }
+  }
+
+  moveCandy (dimensions) {
+    return {
+      position: randomPos(dimensions),
+      radius: 100,
+      visible: true
+    }
+  }
 
   render () {
     let { streak, ball, candy, over, score, jumps, confetti, highscores, name } = this.state
@@ -256,13 +200,11 @@ module.exports = React.createClass({
         { over ? renderHighscore() : null }
 
         <div className='name'>
-          <input type='text' value={name} onChange={e => setName(e.target.value)} />
+          <input type='text' placeholder='Your name' value={name || ''} onInput={e => setName(e.target.value)} />
         </div>
 
-        <div className='textcontainer' style={confettiStyle}>
-          <span className='particletext confetti'>
-            <span className='label'>{streakTotal > 1 ? ('+' + streakTotal) : ''}</span>
-          </span>
+        <div className='ConfettiContainer' style={confettiStyle}>
+          <Confetti label={streakTotal > 1 ? ('+' + streakTotal) : ''} />
         </div>
 
         <div style={{ position: 'absolute', left: ball.position.x, top: ball.position.y + 'px' }}>
@@ -280,8 +222,54 @@ module.exports = React.createClass({
       </div>
     )
   }
-})
+}
 
-function timestamp () {
-  return window.performance && window.performance.now ? window.performance.now() : new Date().getTime()
+function space (fn) {
+  return function onSpaceKey (event) {
+    if (event.keyCode === 32) {
+      fn(event)
+    }
+  }
+}
+
+function parse (str, fallback) {
+  try {
+    return JSON.parse(str) || fallback
+  } catch (err) {
+    return fallback
+  }
+}
+
+function random (min, max) {
+  return (min + (Math.random() * (max - min)))
+}
+
+function randomPos (dim) {
+  return { x: random(0, dim.width - 100), y: random(0, dim.height - 100) }
+}
+
+function overlap (b1, b2) {
+  if (!b1.visible || !b2.visible) return false
+
+  let s = box => ({
+    left: box.position.x + box.radius / 4,
+    right: box.position.x + box.radius - box.radius / 4,
+    top: box.position.y + box.radius / 4,
+    bottom: box.position.y + box.radius - box.radius / 4
+  })
+  let box1 = s(b1)
+  let box2 = s(b2)
+  return !(
+    (box1.right < box2.left) ||
+    (box1.left > box2.right) ||
+    (box1.top > box2.bottom) ||
+    (box1.bottom < box2.top)
+  )
+}
+
+function computeDimensions () {
+  return {
+    width: window.innerWidth - ICE_PADDING,
+    height: window.innerHeight - ICE_PADDING
+  }
 }

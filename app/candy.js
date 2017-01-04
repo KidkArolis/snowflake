@@ -1,6 +1,8 @@
-const React = require('react')
+const React = require('preact')
 
-module.exports = React.createClass({
+// http://codepen.io/levchenkod/pen/jEMwBb
+
+module.exports = class Candy extends React.Component {
   render () {
     return (
       <svg version='1.1' viewBox='0 0 100 100'>
@@ -17,4 +19,4 @@ module.exports = React.createClass({
       </svg>
     )
   }
-})
+}
