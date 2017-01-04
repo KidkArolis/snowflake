@@ -1,9 +1,14 @@
+* {
+  box-sizing: border-box;
+}
+
 html, body {
   padding: 0;
   margin: 0;
   height: 100%;
   width: 100%;
   font-family: Helvetica;
+  background: aliceblue;
 }
 
 .b {
@@ -11,12 +16,19 @@ html, body {
 }
 
 .Game {
-  border: 10px solid aliceblue;
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  background: white;
+  top: 100px;
+  left: 100px;
+  right: 100px;
+  bottom: 100px;
+}
+
+.Score {
+  position: absolute;
+  font-size: 18px;
+  top: 10px;
+  left: 10px;
 }
 
 .highscore {
@@ -30,24 +42,39 @@ html, body {
   margin-left: -100px;
 }
 
-.name {
+.Name {
   position: absolute;
-  right: 15px;
-  top: 15px;
+  right: 10px;
+  top: 10px;
 }
 
-.name input {
-  font-size: 24px;
+.Name-input {
+  box-sizing: border-box;
+  font-size: 18px;
+  padding-bottom: 4px;
   border: none;
+  border-bottom: 1px solid transparent;
   text-align: right;
 }
 
-.name input:focus {
+.Name-input:hover {
+  border-bottom: 1px solid #eee;
+}
+
+.Name-input:focus {
   outline: none;
+}
+
+.SnowflakeContainer {
+  position: absolute;
 }
 
 .ConfettiContainer {
   position: absolute;
   transition: opacity 0.5s linear;
   opacity: 0;
+}
+
+.CandyContainer {
+  position: absolute;
 }

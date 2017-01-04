@@ -66,7 +66,7 @@ module.exports = class Game extends React.Component {
       candy = this.moveCandy(dimensions)
       streak[streak.length - 1] += 1
       score = score + 1
-      jumps = jumps + 2 + streak.reduce((total, v) => total + v, 0)
+      jumps = jumps + 2 + sum(streak)
 
       // TODO - find a more elegant solution
       clearTimeout(this.gameOverTimeout)
@@ -152,9 +152,64 @@ module.exports = class Game extends React.Component {
   }
 
   render () {
-    let { streak, ball, candy, over, score, jumps, confetti, highscores, name } = this.state
+    let { streak, ball, candy, over, score, jumps, confetti, name } = this.state
 
-    let renderGameOver = () => (
+    let streakTotal = sum(streak)
+
+    let confettiStyle = {
+      opacity: (!over && confetti.visible) ? 1 : 0,
+      top: confetti.position.y + 'px',
+      left: confetti.position.x + 'px'
+    }
+
+    let snowflakeStyle = {
+      left: ball.position.x,
+      top: ball.position.y + 'px'
+    }
+
+    let candyStyle = {
+      width: '100px',
+      opacity: (!over && candy.visible) ? 1 : 0,
+      left: candy.position.x,
+      top: candy.position.y + 'px'
+    }
+
+    return (
+      <div className='Game'>
+        <div className='Score'>
+          Score: <span className='b'>{score}</span><span> | </span>
+          Jumps: <span className='b'>{jumps}</span>
+        </div>
+
+        { over ? this.renderGameOver() : null }
+        { over ? this.renderHighscore() : null }
+
+        <div className='Name'>
+          <input
+            className='Name-input'
+            type='text'
+            placeholder='Your name'
+            value={name || ''}
+            onInput={e => this.setName(e.target.value)} />
+        </div>
+
+        <div className='ConfettiContainer' style={confettiStyle}>
+          <Confetti label={streakTotal > 1 ? ('+' + streakTotal) : ''} />
+        </div>
+
+        <div className='SnowflakeContainer' style={snowflakeStyle}>
+          <Snowflake />
+        </div>
+
+        <div className='CandyContainer' style={candyStyle}>
+          <Candy />
+        </div>
+      </div>
+    )
+  }
+
+  renderGameOver () {
+    return (
       <div style={{
         position: 'absolute',
         fontFamily: 'Helvetica',
@@ -164,63 +219,50 @@ module.exports = class Game extends React.Component {
         left: '200px'
       }}>GAME OVER</div>
     )
+  }
 
-    let streakTotal = streak.reduce((total, v) => total + v, 0)
-
-    let confettiStyle = {
-      opacity: (!over && confetti.visible) ? 1 : 0,
-      top: confetti.position.y + 'px',
-      left: confetti.position.x + 'px'
-    }
-
-    let renderHighscore = () => {
-      return (
-        <div className='highscore'>
-          {highscores.map((h, i) => {
-            return (
-              <div key={i}>{h.name} - {h.score}</div>
-            )
-          })}
-        </div>
-      )
-    }
-
-    const setName = name => {
-      this.setState({ name })
-      window.localStorage.setItem('player', JSON.stringify({ name }))
-    }
-
+  renderHighscore () {
+    let { highscores } = this.state
     return (
-      <div className='Game'>
-        <div style={{ position: 'absolute', fontSize: '20px' }}>
-          Score: <span className='b'>{score}</span><span> | </span>
-          Jumps: <span className='b'>{jumps}</span>
-        </div>
-        { over ? renderGameOver() : null }
-        { over ? renderHighscore() : null }
-
-        <div className='name'>
-          <input type='text' placeholder='Your name' value={name || ''} onInput={e => setName(e.target.value)} />
-        </div>
-
-        <div className='ConfettiContainer' style={confettiStyle}>
-          <Confetti label={streakTotal > 1 ? ('+' + streakTotal) : ''} />
-        </div>
-
-        <div style={{ position: 'absolute', left: ball.position.x, top: ball.position.y + 'px' }}>
-          <Snowflake />
-        </div>
-        <div style={{
-          position: 'absolute',
-          width: '100px',
-          display: (!over && candy.visible) ? 'block' : 'none',
-          left: candy.position.x,
-          top: candy.position.y + 'px'
-        }}>
-          <Candy />
-        </div>
+      <div className='highscore'>
+        {highscores.map((h, i) => {
+          return (
+            <div key={i}>{h.name} - {h.score}</div>
+          )
+        })}
       </div>
     )
+  }
+
+  setName (name) {
+    this.setState({ name })
+    window.localStorage.setItem('player', JSON.stringify({ name }))
+  }
+}
+
+function overlap (b1, b2) {
+  if (!b1.visible || !b2.visible) return false
+
+  let s = box => ({
+    left: box.position.x + box.radius / 4,
+    right: box.position.x + box.radius - box.radius / 4,
+    top: box.position.y + box.radius / 4,
+    bottom: box.position.y + box.radius - box.radius / 4
+  })
+  let box1 = s(b1)
+  let box2 = s(b2)
+  return !(
+    (box1.right < box2.left) ||
+    (box1.left > box2.right) ||
+    (box1.top > box2.bottom) ||
+    (box1.bottom < box2.top)
+  )
+}
+
+function computeDimensions () {
+  return {
+    width: window.innerWidth - ICE_PADDING,
+    height: window.innerHeight - ICE_PADDING
   }
 }
 
@@ -248,28 +290,6 @@ function randomPos (dim) {
   return { x: random(0, dim.width - 100), y: random(0, dim.height - 100) }
 }
 
-function overlap (b1, b2) {
-  if (!b1.visible || !b2.visible) return false
-
-  let s = box => ({
-    left: box.position.x + box.radius / 4,
-    right: box.position.x + box.radius - box.radius / 4,
-    top: box.position.y + box.radius / 4,
-    bottom: box.position.y + box.radius - box.radius / 4
-  })
-  let box1 = s(b1)
-  let box2 = s(b2)
-  return !(
-    (box1.right < box2.left) ||
-    (box1.left > box2.right) ||
-    (box1.top > box2.bottom) ||
-    (box1.bottom < box2.top)
-  )
-}
-
-function computeDimensions () {
-  return {
-    width: window.innerWidth - ICE_PADDING,
-    height: window.innerHeight - ICE_PADDING
-  }
+function sum (list) {
+  return list.reduce((total, v) => total + v, 0)
 }
