@@ -5,6 +5,7 @@ const raf = window.requestAnimationFrame
 module.exports = function (options = {}) {
   let { getState, update, render } = options
 
+  let paused = false
   let t = 0
   let now
   let acc = 0
@@ -43,10 +44,22 @@ module.exports = function (options = {}) {
 
     render(state)
 
-    raf(frame)
+    if (!paused) {
+      raf(frame)
+    }
   }
 
   raf(frame)
+
+  return {
+    pause: () => {
+      paused = !paused
+      if (!paused) {
+        last = timestamp()
+        frame()
+      }
+    }
+  }
 }
 
 function timestamp () {

@@ -6,9 +6,14 @@ const gravity = require('./gravity')
 const loop = require('./loop')
 require('./game.css')
 
-const ICE_PADDING = 20
-// const BASE_WIDTH = 1000
-// const BASE_HEIGHT = 800
+// This is the fixed size of our world
+// so that every game is simulated in identical conditions
+// regardless of the screen size. We will then scale everything
+// up or down in the render function depending on the screen res.
+const BASE = {
+  width: 1280,
+  height: 640
+}
 
 module.exports = class Game extends React.Component {
   constructor () {
@@ -17,7 +22,6 @@ module.exports = class Game extends React.Component {
   }
 
   initialState () {
-    let dimensions = computeDimensions()
     return {
       t: 0,
       over: false,
@@ -25,12 +29,13 @@ module.exports = class Game extends React.Component {
       jumps: 20,
       score: 0,
       streak: [0],
-      dimensions: dimensions,
+      dimensions: BASE,
+      screen: computeScreenDimensions(),
       highscores: parse(window.localStorage.getItem('highscores'), []),
       scoreRecorded: false,
       ball: {
         visible: true,
-        position: { x: dimensions.width / 2, y: 0 },
+        position: { x: BASE.width / 2, y: 0 },
         velocity: { x: 0, y: 0 },
         mass: 2, // kg
         radius: 64, // 1px = 1cm (?)
@@ -38,7 +43,7 @@ module.exports = class Game extends React.Component {
       },
       candy: {
         visible: true,
-        position: randomPos(dimensions),
+        position: randomPos(BASE),
         radius: 100
       },
       confetti: {
@@ -49,18 +54,23 @@ module.exports = class Game extends React.Component {
   }
 
   componentDidMount () {
-    loop({
+    this.loop = loop({
       getState: () => this.state,
       update: (state, t, step, alpha) => this.update(state, t, step, alpha),
       render: (state, alpha) => {
         this.setState(state)
       }
     })
-    document.addEventListener('keydown', space(() => this.jump()))
+    document.addEventListener('keydown', key('SPACE', () => this.jump()))
+    document.addEventListener('keydown', key('P', () => this.pause()))
     document.addEventListener('touchstart', () => this.jump(), false)
     window.addEventListener('resize', () => {
-      this.setState({ dimensions: computeDimensions() })
+      this.setState({ screen: computeScreenDimensions() })
     })
+  }
+
+  pause () {
+    this.loop.pause()
   }
 
   update (state, t, dt) {
@@ -163,26 +173,58 @@ module.exports = class Game extends React.Component {
 
     let streakTotal = sum(streak)
 
+    let { screen, dimensions } = this.state
+    let icePadding = 10 * 2
+    let scaleFactor
+    if ((screen.width - icePadding) / (screen.height - icePadding) > dimensions.width / dimensions.height) {
+      scaleFactor = (screen.height - icePadding) / dimensions.height
+    } else {
+      scaleFactor = (screen.width - icePadding) / dimensions.width
+    }
+
+    let scale = v => v * scaleFactor
+
+    let stageStyle = {
+      position: 'absolute',
+      top: 10,
+      left: 0,
+      right: 0,
+      bottom: 0,
+      marginLeft: 'auto',
+      marginRight: 'auto',
+      // marginTop: 'auto',
+      // marginBottom: 'auto',
+      width: scale(dimensions.width),
+      height: scale(dimensions.height),
+      boxSizing: 'border-box'
+    }
+
     let confettiStyle = {
       opacity: (!over && confetti.visible) ? 1 : 0,
-      top: confetti.position.y + 'px',
-      left: confetti.position.x + 'px'
+      top: scale(confetti.position.y),
+      left: scale(confetti.position.x),
+      transformOrigin: 'left top',
+      transform: `scale(${scaleFactor})`
     }
 
     let snowflakeStyle = {
-      left: ball.position.x,
-      top: ball.position.y + 'px'
+      left: scale(ball.position.x),
+      top: scale(ball.position.y),
+      transformOrigin: 'left top',
+      transform: `scale(${scaleFactor})`
     }
 
     let candyStyle = {
       width: '100px',
       opacity: (!over && candy.visible) ? 1 : 0,
-      left: candy.position.x,
-      top: candy.position.y + 'px'
+      left: scale(candy.position.x),
+      top: scale(candy.position.y),
+      transformOrigin: 'left top',
+      transform: `scale(${scaleFactor})`
     }
 
     return (
-      <div className='Game'>
+      <div className='Game' style={stageStyle}>
         <div className='Score'>
           Score: <span className='b'>{score}</span><span> | </span>
           Jumps: <span className='b'>{jumps}</span>
@@ -266,16 +308,20 @@ function overlap (b1, b2) {
   )
 }
 
-function computeDimensions () {
+function computeScreenDimensions () {
   return {
-    width: window.innerWidth - ICE_PADDING,
-    height: window.innerHeight - ICE_PADDING
+    width: window.innerWidth,
+    height: window.innerHeight
   }
 }
 
-function space (fn) {
+function key (keyName, fn) {
+  let keys = {
+    'SPACE': 32,
+    'P': 80
+  }
   return function onSpaceKey (event) {
-    if (event.keyCode === 32) {
+    if (event.keyCode === keys[keyName]) {
       fn(event)
     }
   }
