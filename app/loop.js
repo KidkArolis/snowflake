@@ -22,12 +22,13 @@ module.exports = function (options = {}) {
     let frameTime = Math.min(1, (now - last) / 1000)
     last = now
 
-    acc = acc + frameTime
-    while (acc > slowStep) {
-      acc -= slowStep
-      t += step
-      state = update(state, t, step)
-    }
+    // TODO - for now, just rely on raf - it's smoother without interpolation
+    // acc = acc + frameTime
+    // while (acc > slowStep) {
+    //   acc -= slowStep
+    //   t += step
+    //   state = update(state, t, step)
+    // }
 
     // TODO - figure out how to incorporate interpolation
     // We can set slow to smth like 5, which slows down the game
@@ -42,6 +43,7 @@ module.exports = function (options = {}) {
     // engine in gravity.js.
     // let alpha = acc / slow
 
+    state = update(state, t, step / slow) // this is bypassing the update cycle above
     render(state)
 
     if (!paused) {
