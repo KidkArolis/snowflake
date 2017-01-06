@@ -1,10 +1,15 @@
 const React = require('preact')
 const Snowflake = require('./snowflake')
 const Candy = require('./candy')
+const Milk = require('./milk')
+const Leaves = require('./leaves')
+const Sock = require('./sock')
 const Confetti = require('./confetti')
 const gravity = require('./gravity')
 const loop = require('./loop')
 require('./game.css')
+
+const goodies = [Candy, Sock, Milk, Leaves]
 
 // This is the fixed size of our world
 // so that every game is simulated in identical conditions
@@ -12,7 +17,7 @@ require('./game.css')
 // up or down in the render function depending on the screen res.
 const BASE = {
   width: 1280,
-  height: 640
+  height: 680
 }
 
 module.exports = class Game extends React.Component {
@@ -43,6 +48,7 @@ module.exports = class Game extends React.Component {
       },
       candy: {
         visible: true,
+        type: random(0, 3),
         position: randomPos(BASE),
         radius: 100
       },
@@ -64,6 +70,7 @@ module.exports = class Game extends React.Component {
     document.addEventListener('keydown', key('SPACE', () => this.jump()))
     document.addEventListener('keydown', key('P', () => this.pause()))
     document.addEventListener('touchstart', () => this.jump(), false)
+    document.addEventListener('click', () => this.jump(), false)
     window.addEventListener('resize', () => {
       this.setState({ screen: computeScreenDimensions() })
     })
@@ -162,6 +169,7 @@ module.exports = class Game extends React.Component {
 
   moveCandy (dimensions) {
     return {
+      type: random(0, 3),
       position: randomPos(dimensions),
       radius: 100,
       visible: true
@@ -203,8 +211,8 @@ module.exports = class Game extends React.Component {
       opacity: (!over && confetti.visible) ? 1 : 0,
       top: scale(confetti.position.y),
       left: scale(confetti.position.x),
-      transformOrigin: 'left top',
-      transform: `scale(${scaleFactor})`
+      // transformOrigin: 'left top',
+      // transform: `scale(${scaleFactor})`
     }
 
     let snowflakeStyle = {
@@ -223,6 +231,8 @@ module.exports = class Game extends React.Component {
       transform: `scale(${scaleFactor})`
     }
 
+    let Goody = goodies[candy.type]
+
     return (
       <div className='Game' style={stageStyle}>
         <div className='Score'>
@@ -231,7 +241,6 @@ module.exports = class Game extends React.Component {
         </div>
 
         { over ? this.renderGameOver() : null }
-        { over ? this.renderHighscore() : null }
 
         <div className='Name'>
           <input
@@ -251,34 +260,29 @@ module.exports = class Game extends React.Component {
         </div>
 
         <div className='CandyContainer' style={candyStyle}>
-          <Candy />
+          <Goody />
         </div>
       </div>
     )
   }
 
   renderGameOver () {
-    return (
-      <div style={{
-        position: 'absolute',
-        fontFamily: 'Helvetica',
-        fontSize: '48px',
-        fontWeight: 'bold',
-        top: '200px',
-        left: '200px'
-      }}>GAME OVER</div>
-    )
-  }
-
-  renderHighscore () {
     let { highscores } = this.state
+
     return (
-      <div className='Highscore'>
-        {highscores.map((h, i) => {
-          return (
-            <div key={i}>{h.name} - {h.score}</div>
-          )
-        })}
+      <div className='GameOver'>
+        <div className='GameOver-inner'>
+          <div className='GameOver-label'>
+            GAME OVER
+          </div>
+          <div className='Highscore'>
+            {highscores.map((h, i) => {
+              return (
+                <div key={i}>{h.name} - {h.score}</div>
+              )
+            })}
+          </div>
+        </div>
       </div>
     )
   }
@@ -293,10 +297,10 @@ function overlap (b1, b2) {
   if (!b1.visible || !b2.visible) return false
 
   let s = box => ({
-    left: box.position.x + box.radius / 4,
-    right: box.position.x + box.radius - box.radius / 4,
-    top: box.position.y + box.radius / 4,
-    bottom: box.position.y + box.radius - box.radius / 4
+    left: box.position.x + box.radius / 5,
+    right: box.position.x + box.radius - box.radius / 5,
+    top: box.position.y + box.radius / 5,
+    bottom: box.position.y + box.radius - box.radius / 5
   })
   let box1 = s(b1)
   let box2 = s(b2)
@@ -336,7 +340,7 @@ function parse (str, fallback) {
 }
 
 function random (min, max) {
-  return (min + (Math.random() * (max - min)))
+  return min + Math.floor(Math.random() * (max - min + 1))
 }
 
 function randomPos (dim) {

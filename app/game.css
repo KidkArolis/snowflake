@@ -32,17 +32,6 @@ html, body {
   left: 10px;
 }
 
-.Highscore {
-  font-family: 'Passion One', cursive;
-  color: rgba(233, 100, 106, 1);
-  font-size: 32px;
-  text-align: right;
-  position: absolute;
-  top: 50px;
-  right: 50px;
-  margin-left: -100px;
-}
-
 .Name {
   position: absolute;
   right: 10px;
@@ -78,4 +67,33 @@ html, body {
 
 .CandyContainer {
   position: absolute;
+}
+
+.GameOver {
+  position: absolute;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+.GameOver-inner {
+  flex: none;
+  max-width: 50%;
+}
+
+.GameOver-label {
+  font-family: 'Passion One', Helvetica, sans-serif;
+  font-size: 32px;
+  text-align: center;
+}
+
+.Highscore {
+  font-family: Helvetica, sans-serif;
+  color: rgba(233, 100, 106, 1);
+  font-size: 18px;
+  text-align: center;
 }
