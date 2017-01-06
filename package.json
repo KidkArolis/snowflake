@@ -6,7 +6,8 @@
   "scripts": {
     "build": "webpack -p",
     "start": "webpack -w",
-    "test": "standard"
+    "test": "standard",
+    "deploy": "pm2 deploy production"
   },
   "author": "",
   "license": "ISC",
