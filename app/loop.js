@@ -1,35 +1,52 @@
 // http://codeincomplete.com/posts/javascript-game-foundations-the-game-loop/
-// Not sure yet how update/render map to React paradigm
 
-const { FPS } = require('./constants')
-const requestAnimationFrame = window.requestAnimationFrame
+const raf = window.requestAnimationFrame
 
-// TODO - figure what this is for :)
-// Figure out how to use update/render and what the params mean
-// and how to use the slow motion mode option and how to integrate
-// correctly with the gravity module.
+module.exports = function (options = {}) {
+  let { getState, update, render } = options
 
-module.exports = function (update, options = {}) {
+  let t = 0
   let now
-  let dt = 0
+  let acc = 0
   let last = timestamp()
-  let slow = options.slow || 1
-  let step = 1 / FPS
+  let slow = options.slow || 0.5 // 0.5 gives the game a faster, better feel
+  let step = 1 / 60 // dt, fixed delta time
   let slowStep = slow * step
 
+
   function frame () {
+    let state = getState()
+
     now = timestamp()
-    dt = dt + Math.min(1, (now - last) / 1000)
-    while (dt > slowStep) {
-      dt = dt - slowStep
-      update(step) // vs render (?)
-    }
-    // render(dt / slow)
+    let frameTime = Math.min(1, (now - last) / 1000)
     last = now
-    requestAnimationFrame(frame, options.canvas)
+
+    acc = acc + frameTime
+    while (acc > slowStep) {
+      acc -= slowStep
+      t += step
+      state = update(state, t, step)
+    }
+
+    // TODO - figure out how to incorporate interpolation
+    // We can set slow to smth like 5, which slows down the game
+    // 5 times, e.g. 1 second of gameplay happens over 5 seconds of real
+    // time. But in this case, the rendering becomes janky, since we only
+    // advance the state of the world every step * 5 s. What we need to do
+    // is somehow interpolate the position of the snowflake based on previous
+    // position, next position and current time, or alpha = acc / slow.
+    // This is not essential to the game, but it's a fun thing to explore since
+    // it breaks the React paradigm somewhat in that I don't have prev/next state
+    // handily available for interpolation in a way that doesn't affect the physics
+    // engine in gravity.js.
+    // let alpha = acc / slow
+
+    render(state)
+
+    raf(frame)
   }
 
-  requestAnimationFrame(frame)
+  raf(frame)
 }
 
 function timestamp () {

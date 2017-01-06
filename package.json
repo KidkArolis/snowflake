@@ -16,11 +16,13 @@
     "webpack": "^2.2.0-rc.2"
   },
   "dependencies": {
+    "clone": "^2.1.0",
     "css-loader": "^0.26.1",
     "express": "^4.14.0",
     "preact": "^7.1.0",
     "react": "^15.4.1",
     "react-dom": "^15.4.1",
-    "style-loader": "^0.13.1"
+    "style-loader": "^0.13.1",
+    "zaphod": "^0.2.0"
   }
 }

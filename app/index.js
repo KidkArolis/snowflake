@@ -19,6 +19,7 @@ module.exports = class Game extends React.Component {
   initialState () {
     let dimensions = computeDimensions()
     return {
+      t: 0,
       over: false,
       name: parse(window.localStorage.getItem('player'), { name: null }).name,
       jumps: 20,
@@ -48,7 +49,13 @@ module.exports = class Game extends React.Component {
   }
 
   componentDidMount () {
-    loop(() => this.update())
+    loop({
+      getState: () => this.state,
+      update: (state, t, step, alpha) => this.update(state, t, step, alpha),
+      render: (state, alpha) => {
+        this.setState(state)
+      }
+    })
     document.addEventListener('keydown', space(() => this.jump()))
     document.addEventListener('touchstart', () => this.jump(), false)
     window.addEventListener('resize', () => {
@@ -56,10 +63,10 @@ module.exports = class Game extends React.Component {
     })
   }
 
-  update () {
-    let { ball, candy, confetti, score, jumps, streak, dimensions } = this.state
+  update (state, t, dt) {
+    let { ball, candy, confetti, score, jumps, streak, dimensions } = state
 
-    let nextBall = gravity(ball, dimensions)
+    let nextBall = gravity(dt, ball, dimensions)
 
     if (overlap(nextBall, candy)) {
       confetti = this.revealConfetti(candy.position)
@@ -72,7 +79,7 @@ module.exports = class Game extends React.Component {
       clearTimeout(this.gameOverTimeout)
     }
 
-    this.setState({ ball: nextBall, candy, confetti, score, jumps, streak })
+    return { ball: nextBall, candy, confetti, score, jumps, streak, dimensions, t }
   }
 
   jump () {
@@ -152,7 +159,7 @@ module.exports = class Game extends React.Component {
   }
 
   render () {
-    let { streak, ball, candy, over, score, jumps, confetti, name } = this.state
+    let { streak, ball, candy, over, score, jumps, confetti, name, t } = this.state
 
     let streakTotal = sum(streak)
 
@@ -188,7 +195,7 @@ module.exports = class Game extends React.Component {
           <input
             className='Name-input'
             type='text'
-            placeholder='Your name'
+            placeholder='Highscore name'
             value={name || ''}
             onInput={e => this.setName(e.target.value)} />
         </div>
@@ -224,7 +231,7 @@ module.exports = class Game extends React.Component {
   renderHighscore () {
     let { highscores } = this.state
     return (
-      <div className='highscore'>
+      <div className='Highscore'>
         {highscores.map((h, i) => {
           return (
             <div key={i}>{h.name} - {h.score}</div>
