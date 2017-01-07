@@ -3,8 +3,8 @@
 }
 
 .Confetti-particles {
-  width: 100px;
-  height: 100px;
+  width: 140px;
+  height: 160px;
   display: block;
 }
 
@@ -18,7 +18,7 @@
 .Confetti-particle {
   opacity:0;
   position: absolute;
-  animation: Confetti 3s ease-in infinite;
+  animation: Confetti 2s ease-in infinite;
 }
 
 .Confetti-c1 {

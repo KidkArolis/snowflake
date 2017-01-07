@@ -1,4 +1,5 @@
 // http://codeincomplete.com/posts/javascript-game-foundations-the-game-loop/
+// Currently using Semi-fixed timestep from http://gafferongames.com/game-physics/fix-your-timestep/
 
 const raf = window.requestAnimationFrame
 
@@ -10,10 +11,10 @@ module.exports = function (options = {}) {
   let now
   let acc = 0
   let last = timestamp()
-  let slow = options.slow || 0.5 // 0.5 gives the game a faster, better feel
+  // slow > 1 currently doesn't work since we use the remainder acc to smooth the animation
+  let slow = options.slow || 0.6 // 0.5 gives the game a faster, better feel
   let step = 1 / 60 // dt, fixed delta time
   let slowStep = slow * step
-
 
   function frame () {
     let state = getState()
@@ -23,12 +24,21 @@ module.exports = function (options = {}) {
     last = now
 
     // TODO - for now, just rely on raf - it's smoother without interpolation
-    // acc = acc + frameTime
-    // while (acc > slowStep) {
-    //   acc -= slowStep
-    //   t += step
-    //   state = update(state, t, step)
-    // }
+    acc = acc + frameTime
+    let i = 0
+    while (acc > slowStep) {
+      acc -= slowStep
+      t += step
+      i++
+      state = update(state, t, step)
+    }
+
+    // leftover
+    if (acc > 0) {
+      state = update(state, t, step)
+      t += acc
+      acc = 0
+    }
 
     // TODO - figure out how to incorporate interpolation
     // We can set slow to smth like 5, which slows down the game
@@ -43,7 +53,8 @@ module.exports = function (options = {}) {
     // engine in gravity.js.
     // let alpha = acc / slow
 
-    state = update(state, t, step / slow) // this is bypassing the update cycle above
+    // console.log('Updating with', frameTime * slow)
+    // state = update(state, t, frameTime * slow) // this is bypassing the update cycle above
     render(state)
 
     if (!paused) {

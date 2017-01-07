@@ -29,6 +29,7 @@ module.exports = class Game extends React.Component {
   initialState () {
     return {
       t: 0,
+      paused: false,
       over: false,
       name: parse(window.localStorage.getItem('player'), { name: null }).name,
       jumps: 20,
@@ -78,6 +79,7 @@ module.exports = class Game extends React.Component {
 
   pause () {
     this.loop.pause()
+    this.setState({ paused: !this.state.paused })
   }
 
   update (state, t, dt) {
@@ -100,7 +102,9 @@ module.exports = class Game extends React.Component {
   }
 
   jump () {
-    let { ball, over, jumps, streak } = this.state
+    let { paused, ball, over, jumps, streak } = this.state
+
+    if (paused) return
 
     // game is in over state, restart the game upon hitting space
     if (over) {
@@ -159,7 +163,7 @@ module.exports = class Game extends React.Component {
       let confetti = this.state.confetti
       confetti.visible = false
       this.setState({ confetti })
-    }, 3000)
+    }, 2000)
 
     return {
       visible: true,
@@ -209,10 +213,10 @@ module.exports = class Game extends React.Component {
 
     let confettiStyle = {
       opacity: (!over && confetti.visible) ? 1 : 0,
-      top: scale(confetti.position.y),
-      left: scale(confetti.position.x),
-      // transformOrigin: 'left top',
-      // transform: `scale(${scaleFactor})`
+      top: scale(confetti.position.y) - 10,
+      left: scale(confetti.position.x) - 20,
+      transformOrigin: 'left top',
+      transform: `scale(${scaleFactor})`
     }
 
     let snowflakeStyle = {
@@ -223,7 +227,6 @@ module.exports = class Game extends React.Component {
     }
 
     let candyStyle = {
-      width: '100px',
       opacity: (!over && candy.visible) ? 1 : 0,
       left: scale(candy.position.x),
       top: scale(candy.position.y),
