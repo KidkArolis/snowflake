@@ -5,7 +5,7 @@ require('./confetti.css')
 
 const rnd = (m, n) => Math.floor(Math.random() * (n - m + 1)) + m
 
-const CONFETTI_COUNT = 40
+const CONFETTI_COUNT = 15
 
 class Particles extends React.Component {
   shouldComponentUpdate () {
