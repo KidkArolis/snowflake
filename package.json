@@ -26,9 +26,6 @@
   },
   "engines": {
     "node": "^8.0.0"
-  },
-  "now": {
-    "alias": "snowflake.kn8.lt"
   }
 }
 
