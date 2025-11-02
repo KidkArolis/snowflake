@@ -1,8 +1,8 @@
-const React = require('preact')
+import { Component } from 'react'
 
 // http://codepen.io/levchenkod/pen/jEMwBb
 
-module.exports = class Leaves extends React.Component {
+export default class Leaves extends Component {
   shouldComponentUpdate () {
     return false
   }

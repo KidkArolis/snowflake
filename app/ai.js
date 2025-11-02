@@ -1,6 +1,6 @@
 // :)
-module.exports = function AI () {
-  setInterval(function () {
+export default function AI () {
+  setInterval(() => {
     if (Math.random() < 0.5) {
       // jump()
     }

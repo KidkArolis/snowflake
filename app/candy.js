@@ -1,8 +1,8 @@
-const React = require('preact')
+import { Component } from 'react'
 
 // http://codepen.io/levchenkod/pen/jEMwBb
 
-module.exports = class Candy extends React.Component {
+export default class Candy extends Component {
   shouldComponentUpdate () {
     return false
   }

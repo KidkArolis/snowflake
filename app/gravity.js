@@ -16,7 +16,7 @@ const Cd = 0.47  // Dimensionless
 const rho = 1.22 // kg / m^3
 const ag = 9.81  // m / s^2
 
-module.exports = function gravity (dt, ball, dim, alpha = 1) {
+export default function gravity (dt, ball, dim, alpha = 1) {
   let A = Math.PI * ball.radius * ball.radius / (10000) // m^2
 
   // Do physics

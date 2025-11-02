@@ -1,6 +1,6 @@
-const React = require('preact')
+import { Component } from 'react'
 
-module.exports = class Snowflake extends React.Component {
+export default class Snowflake extends Component {
   shouldComponentUpdate () {
     return false
   }

@@ -1,13 +1,13 @@
 // http://codepen.io/OfficialAntarctica/pen/bpxgWZ
 
-const React = require('preact')
-require('./confetti.css')
+import { Component } from 'react'
+import './confetti.css'
 
 const rnd = (m, n) => Math.floor(Math.random() * (n - m + 1)) + m
 
 const CONFETTI_COUNT = 15
 
-class Particles extends React.Component {
+class Particles extends Component {
   shouldComponentUpdate () {
     return false
   }
@@ -33,7 +33,7 @@ class Particles extends React.Component {
   }
 }
 
-class Confetti extends React.Component {
+class Confetti extends Component {
   shouldComponentUpdate (nextProps) {
     return nextProps.label !== this.props.label
   }
@@ -50,4 +50,4 @@ class Confetti extends React.Component {
   }
 }
 
-module.exports = Confetti
+export default Confetti

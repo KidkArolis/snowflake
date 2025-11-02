@@ -2,30 +2,29 @@
   "name": "snowflake",
   "version": "1.0.0",
   "description": "A game",
-  "main": "server.js",
   "scripts": {
-    "build": "webpack -p",
-    "start": "node .",
-    "test": "standard",
-    "deploy": "git push flynn master",
-    "postinstall": "npm run build"
+    "dev": "webpack serve --mode development",
+    "build": "webpack --mode production",
+    "start": "npm run dev",
+    "test": "neostandard"
   },
   "author": "Karolis Narkevicius <karolis.n@gmail.com>",
   "license": "ISC",
   "dependencies": {
-    "buble-loader": "^0.4.0",
-    "css-loader": "^0.26.1",
-    "express": "^4.14.0",
-    "preact": "^7.1.0",
-    "style-loader": "^0.13.1",
-    "webpack": "^2.2.0-rc.2",
-    "webpack-dev-middleware": "^1.9.0"
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
-    "standard": "^8.6.0"
+    "@swc/core": "^1.14.0",
+    "css-loader": "^7.1.2",
+    "neostandard": "^0.12.2",
+    "swc-loader": "^0.2.6",
+    "style-loader": "^4.0.0",
+    "webpack": "^5.102.1",
+    "webpack-cli": "^6.0.1",
+    "webpack-dev-server": "^5.2.2"
   },
   "engines": {
-    "node": "^8.0.0"
+    "node": ">=24"
   }
 }
-

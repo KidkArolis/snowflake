@@ -1,5 +1,9 @@
-const React = require('preact')
-const Game = require('./game')
+import { createRoot } from 'react-dom/client'
+import Game from './game'
 
-const root = document.querySelector('#root')
-React.render(<Game />, root)
+const rootElement = document.querySelector('#root')
+
+if (rootElement) {
+  const root = createRoot(rootElement)
+  root.render(<Game />)
+}

@@ -1,12 +1,12 @@
-module.exports = {
-  jump: function () {
+const track = {
+  jump () {
     window.ga('send', {
       hitType: 'event',
       eventCategory: 'Game',
       eventAction: 'jump'
     })
   },
-  score: function (name, score) {
+  score (name, score) {
     window.ga('send', {
       hitType: 'event',
       eventCategory: 'Game',
@@ -16,3 +16,5 @@ module.exports = {
     })
   }
 }
+
+export default track

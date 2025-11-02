@@ -1,14 +1,14 @@
-const React = require('preact')
-const Snowflake = require('./snowflake')
-const Candy = require('./candy')
-const Milk = require('./milk')
-const Leaves = require('./leaves')
-const Sock = require('./sock')
-const Confetti = require('./confetti')
-const gravity = require('./gravity')
-const loop = require('./loop')
-const track = require('./track')
-require('./game.css')
+import { Component } from 'react'
+import Snowflake from './snowflake'
+import Candy from './candy'
+import Milk from './milk'
+import Leaves from './leaves'
+import Sock from './sock'
+import Confetti from './confetti'
+import gravity from './gravity'
+import loop from './loop'
+import track from './track'
+import './game.css'
 
 const goodies = [Candy, Sock, Milk, Leaves]
 
@@ -21,7 +21,7 @@ const BASE = {
   height: 680
 }
 
-module.exports = class Game extends React.Component {
+export default class Game extends Component {
   constructor () {
     super()
     this.state = this.initialState()

@@ -3,7 +3,7 @@
 
 const raf = window.requestAnimationFrame
 
-module.exports = function (options = {}) {
+export default function loop (options = {}) {
   let { getState, update, render } = options
 
   let paused = false
